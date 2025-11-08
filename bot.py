@@ -44,8 +44,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === Start command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("👋 Hi! Send me any English sentence and I'll reply in Thai with translation and pronunciation.")
-# ======DUMMY ====
-# Dummy web server for Render (keeps service alive)
+
+# ====== DUMMY WEB SERVER (for Render free plan) ======
 app = Flask(__name__)
 
 @app.route('/')
@@ -55,18 +55,19 @@ def home():
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
 
-# Start Flask in background thread
-threading.Thread(target=run_flask).start()
 # === Main ===
 def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    bot_app.add_handler(CommandHandler("start", start))
+    bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("✅ Bot is running...")
-    app.run_polling()
+
+    # Start Flask in background thread
+    threading.Thread(target=run_flask, daemon=True).start()
+
+    bot_app.run_polling()
 
 if __name__ == "__main__":
     main()
-
