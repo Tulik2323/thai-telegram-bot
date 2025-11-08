@@ -3,30 +3,31 @@ import threading
 from flask import Flask
 from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
-from openai import OpenAI
+import google.generativeai as genai
 from gtts import gTTS
 
 # === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
+# === Configure Gemini ===
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
-# === Flask dummy web server (for Render keep-alive) ===
+# === Flask dummy web server (keep-alive for Render) ===
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Thai Telegram Bot is running!"
+    return "🤖 Thai Telegram Bot is running with Gemini!"
 
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
 
-# Start Flask server in background
+# Start Flask in background
 threading.Thread(target=run_flask).start()
 
-# === OpenAI translation function ===
+# === Translation using Gemini ===
 async def translate_to_thai(text):
     prompt = (
         f"Translate the following English text to Thai and provide:\n"
@@ -36,11 +37,8 @@ async def translate_to_thai(text):
         f"Text: {text}"
     )
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response.choices[0].message.content
+    response = model.generate_content(prompt)
+    return response.text.strip()
 
 # === Voice generation ===
 async def generate_voice(thai_text):
@@ -70,7 +68,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === /start command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Hi! Send me any English sentence and I'll reply in Thai with translation and pronunciation."
+        "👋 Hi! Send me any English sentence and I'll reply in Thai (via Gemini) with translation and pronunciation."
     )
 
 # === Main entrypoint ===
@@ -80,7 +78,7 @@ def main():
     app_telegram.add_handler(CommandHandler("start", start))
     app_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("✅ Bot is running...")
+    print("✅ Bot is running with Gemini...")
     app_telegram.run_polling()
 
 if __name__ == "__main__":
