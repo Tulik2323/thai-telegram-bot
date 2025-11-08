@@ -3,6 +3,8 @@ from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import openai
 from gtts import gTTS
+import threading
+from flask import Flask
 
 # === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -42,7 +44,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === Start command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("👋 Hi! Send me any English sentence and I'll reply in Thai with translation and pronunciation.")
+# ======DUMMY ====
+# Dummy web server for Render (keeps service alive)
+app = Flask(__name__)
 
+@app.route('/')
+def home():
+    return "🤖 Thai Telegram Bot is running!"
+
+def run_flask():
+    app.run(host="0.0.0.0", port=10000)
+
+# Start Flask in background thread
+threading.Thread(target=run_flask).start()
 # === Main ===
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -55,3 +69,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
