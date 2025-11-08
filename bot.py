@@ -61,4 +61,27 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         thai_line = translation.split('\n')[0]
         voice_file = await generate_voice(thai_line)
 
-        await update.message.rep
+        await update.message.reply_text(translation)
+        await update.message.reply_audio(audio=InputFile(voice_file))
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error: {e}")
+
+# === /start command ===
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "👋 Hi! Send me any English sentence and I'll reply in Thai with translation and pronunciation."
+    )
+
+# === Main entrypoint ===
+def main():
+    app_telegram = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app_telegram.add_handler(CommandHandler("start", start))
+    app_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    print("✅ Bot is running...")
+    app_telegram.run_polling()
+
+if __name__ == "__main__":
+    main()
