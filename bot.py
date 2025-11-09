@@ -12,16 +12,16 @@ from telegram.error import Conflict
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# === Configure Gemini ===
+# === Configure Gemini (v1 API) ===
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("models/gemini-1.5-flash")  # <- עובד בכל חשבון פעיל
 
 # === Flask dummy web server (keep-alive for Render) ===
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Thai Telegram Bot is running with Gemini (gemini-pro)!"
+    return "🤖 Thai Telegram Bot is running with Gemini (v1 API)"
 
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
@@ -67,7 +67,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === /start command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Hi! Send me any English sentence and I'll reply in Thai (via Gemini-pro) with translation and pronunciation."
+        "👋 Hi! Send me any English sentence and I'll reply in Thai (via Gemini 1.5 Flash) with translation and pronunciation."
     )
 
 # === Main entrypoint ===
@@ -75,7 +75,7 @@ def main():
     app_telegram = ApplicationBuilder().token(BOT_TOKEN).build()
     app_telegram.add_handler(CommandHandler("start", start))
     app_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    print("✅ Bot is running with Gemini (gemini-pro)...")
+    print("✅ Bot is running with Gemini 1.5 Flash (v1 API)...")
     try:
         app_telegram.run_polling()
     except Conflict:
