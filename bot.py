@@ -7,7 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 from gtts import gTTS
 import sys
 from telegram.error import Conflict
-
+ 
 # === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -85,5 +85,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
