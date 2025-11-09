@@ -5,6 +5,8 @@ from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 import google.generativeai as genai
 from gtts import gTTS
+import sys
+from telegram.error import Conflict
 
 # === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -12,7 +14,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # === Configure Gemini ===
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 # === Flask dummy web server (keep-alive for Render) ===
 app = Flask(__name__)
@@ -79,7 +81,11 @@ def main():
     app_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("✅ Bot is running with Gemini...")
-    app_telegram.run_polling()
+    try:
+        app_telegram.run_polling()
+    except Conflict:
+        print("⚠️ Another instance is already running. Exiting.")
+        sys.exit()
 
 if __name__ == "__main__":
     main()
