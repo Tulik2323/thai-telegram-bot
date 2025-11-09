@@ -14,14 +14,14 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # === Configure Gemini ===
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
+model = genai.GenerativeModel("gemini-pro")
 
 # === Flask dummy web server (keep-alive for Render) ===
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Thai Telegram Bot is running with Gemini!"
+    return "🤖 Thai Telegram Bot is running with Gemini (gemini-pro)!"
 
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
@@ -38,7 +38,6 @@ async def translate_to_thai(text):
         f"3. English meaning\n\n"
         f"Text: {text}"
     )
-
     response = model.generate_content(prompt)
     return response.text.strip()
 
@@ -56,8 +55,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         translation = await translate_to_thai(user_text)
-
-        # Extract first line (Thai) for voice
         thai_line = translation.split('\n')[0]
         voice_file = await generate_voice(thai_line)
 
@@ -70,17 +67,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === /start command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Hi! Send me any English sentence and I'll reply in Thai (via Gemini) with translation and pronunciation."
+        "👋 Hi! Send me any English sentence and I'll reply in Thai (via Gemini-pro) with translation and pronunciation."
     )
 
 # === Main entrypoint ===
 def main():
     app_telegram = ApplicationBuilder().token(BOT_TOKEN).build()
-
     app_telegram.add_handler(CommandHandler("start", start))
     app_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    print("✅ Bot is running with Gemini...")
+    print("✅ Bot is running with Gemini (gemini-pro)...")
     try:
         app_telegram.run_polling()
     except Conflict:
