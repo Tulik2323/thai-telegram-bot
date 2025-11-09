@@ -1,9 +1,9 @@
 import os
 import threading
+import requests
 from flask import Flask
 from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
-from google.generativeai import GenerativeModel, configure
 from gtts import gTTS
 import sys
 from telegram.error import Conflict
@@ -12,33 +12,40 @@ from telegram.error import Conflict
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# === Configure Gemini (force v1) ===
-configure(api_key=GEMINI_API_KEY)
-model = GenerativeModel(model_name="models/gemini-1.5-flash")
-
-# === Flask dummy server (keep-alive for Render) ===
+# === Flask dummy server ===
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Thai Telegram Bot (Gemini 1.5 Flash, v1 API)"
+    return "🤖 Thai Telegram Bot is running with Gemini (direct API call)"
 
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
 
 threading.Thread(target=run_flask).start()
 
+# === Function: direct Gemini API call ===
+def gemini_generate(prompt):
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 200:
+        result = response.json()
+        return result["candidates"][0]["content"]["parts"][0]["text"]
+    else:
+        return f"⚠️ Gemini API Error {response.status_code}: {response.text}"
+
 # === Translate English → Thai ===
 async def translate_to_thai(text):
     prompt = (
         f"Translate this English text to Thai and show:\n"
         f"1. Thai translation\n"
-        f"2. Transliteration (Latin)\n"
+        f"2. Transliteration (Latin letters)\n"
         f"3. English meaning\n\n"
         f"Text: {text}"
     )
-    response = model.generate_content(prompt)
-    return response.text.strip()
+    return gemini_generate(prompt)
 
 # === Voice ===
 async def generate_voice(thai_text):
@@ -62,14 +69,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Hi! Send me any English sentence and I'll reply in Thai (Gemini 1.5 Flash v1)."
+        "👋 Hi! Send me any English sentence and I'll reply in Thai using Gemini (direct API v1)."
     )
 
 def main():
     bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    print("✅ Bot is running with Gemini 1.5 Flash (v1 API)...")
+    print("✅ Bot is running with Gemini direct API v1...")
     try:
         bot_app.run_polling()
     except Conflict:
