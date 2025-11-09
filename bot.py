@@ -26,7 +26,7 @@ threading.Thread(target=run_flask).start()
 
 # === Function: direct Gemini API call ===
 def gemini_generate(prompt):
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent?key={GEMINI_API_KEY}"
     headers = {"Content-Type": "application/json"}
     data = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(url, headers=headers, json=data)
@@ -85,3 +85,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
