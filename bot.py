@@ -14,14 +14,14 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # === Configure Gemini (v1 API) ===
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("models/gemini-1.5-flash")  # <- עובד בכל חשבון פעיל
+model = genai.GenerativeModel("models/gemini-1.5-flash")
 
 # === Flask dummy web server (keep-alive for Render) ===
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Thai Telegram Bot is running with Gemini (v1 API)"
+    return "🤖 Thai Telegram Bot is running with Gemini 1.5 Flash (v1 API)"
 
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
