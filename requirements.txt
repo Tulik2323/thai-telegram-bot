@@ -2,6 +2,4 @@ python-telegram-bot==20.6
 requests==2.32.3
 gTTS==2.5.1
 Flask==3.0.3
-googletrans==3.1.0a0
-
-
+deep-translator==1.11.4

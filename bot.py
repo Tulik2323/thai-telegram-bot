@@ -8,6 +8,8 @@ from gtts import gTTS
 from googletrans import Translator  # שימוש ב-googletrans החינמי
 import sys
 from telegram.error import Conflict
+from deep_translator import GoogleTranslator
+
 
 # === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -27,16 +29,18 @@ threading.Thread(target=run_flask).start()
 translator = Translator()
 
 # === Translate English → Thai ===
+from deep_translator import GoogleTranslator
+
+# === Translate English → Thai ===
 async def translate_to_thai(text):
-    result = translator.translate(text, src='en', dest='th')
-    thai_text = result.text
-    translit = result.pronunciation if result.pronunciation else ""
+    thai_text = GoogleTranslator(source='en', target='th').translate(text)
+    translit = ""  # deep-translator לא מחזיר הגייה, אפשר להוסיף מאוחר יותר
     translation = (
         f"🇹🇭 {thai_text}\n"
-        f"🔤 {translit}\n"
         f"🇬🇧 {text}"
     )
     return thai_text, translation
+
 
 # === Voice ===
 async def generate_voice(thai_text):
