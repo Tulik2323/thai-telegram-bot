@@ -1,15 +1,12 @@
 import os
 import threading
-import requests
 from flask import Flask
 from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from gtts import gTTS
-from googletrans import Translator  # שימוש ב-googletrans החינמי
+from deep_translator import GoogleTranslator
 import sys
 from telegram.error import Conflict
-from deep_translator import GoogleTranslator
-
 
 # === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -19,28 +16,18 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Thai Telegram Bot is running with Google Translate!"
+    return "🤖 Thai Telegram Bot is running with Deep Translator!"
 
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
 
 threading.Thread(target=run_flask).start()
 
-translator = Translator()
-
-# === Translate English → Thai ===
-from deep_translator import GoogleTranslator
-
 # === Translate English → Thai ===
 async def translate_to_thai(text):
     thai_text = GoogleTranslator(source='en', target='th').translate(text)
-    translit = ""  # deep-translator לא מחזיר הגייה, אפשר להוסיף מאוחר יותר
-    translation = (
-        f"🇹🇭 {thai_text}\n"
-        f"🇬🇧 {text}"
-    )
+    translation = f"🇹🇭 {thai_text}\n🇬🇧 {text}"
     return thai_text, translation
-
 
 # === Voice ===
 async def generate_voice(thai_text):
@@ -72,7 +59,7 @@ def main():
     bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    print("✅ Bot is running with Google Translate...")
+    print("✅ Bot is running with Deep Translator...")
     try:
         bot_app.run_polling()
     except Conflict:
