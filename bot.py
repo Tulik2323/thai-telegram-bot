@@ -61,13 +61,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # === Main entrypoint ===
+# === Main entrypoint ===
 def main():
     bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    WEBHOOK_URL = "https://thai-telegram-bot-1.onrender.com"  # כתובת השירות שלך
+    WEBHOOK_URL = "https://thai-telegram-bot-1.onrender.com"  # הכתובת הציבורית שלך ב-Render
 
     print("✅ Bot is running with Deep Translator using Webhook...")
 
@@ -87,4 +88,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+if __name__ == "__main__":
+    main()
+
 
