@@ -5,57 +5,57 @@ from gtts import gTTS
 from deep_translator import GoogleTranslator
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "https://thai-telegram-bot-1.onrender.com")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://thai-telegram-bot-1.onrender.com")
 PORT = int(os.getenv("PORT", "10000"))
 
-# --- translate EN -> TH ---
-async def translate_to_thai(text: str):
+# === Translate English → Thai ===
+async def translate_to_thai(text):
     thai = GoogleTranslator(source="en", target="th").translate(text)
-    return thai, f"🇹🇭 {thai}\n🇬🇧 {text}"
+    formatted = f"🇹🇭 {thai}\n🇬🇧 {text}"
+    return thai, formatted
 
-# --- TTS ---
-def make_tts(th_text: str) -> str | None:
-    th_text = (th_text or "").strip()
-    if not th_text:
+# === Voice generation ===
+def create_voice(thai_text):
+    if not thai_text.strip():
         return None
-    fname = "thai_voice.mp3"
-    tts = gTTS(text=th_text, lang="th")
-    tts.save(fname)
-    return fname
+    filename = "thai_voice.mp3"
+    tts = gTTS(text=thai_text, lang='th')
+    tts.save(filename)
+    return filename
 
-# --- handlers ---
+# === Handlers ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Send me any English sentence and I'll translate it to Thai (with audio)."
+        "👋 Hi! Send me any English sentence and I'll translate it to Thai with Google Translate and voice."
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = (update.message.text or "").strip()
-    if not text:
-        return
+    text = update.message.text
     await update.message.chat.send_action("typing")
 
     try:
         thai, formatted = await translate_to_thai(text)
         await update.message.reply_text(formatted)
 
-        voice = make_tts(thai)
+        voice = create_voice(thai)
         if voice:
             await update.message.reply_audio(audio=InputFile(voice))
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error: {e}")
 
+# === Main ===
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("✅ Starting webhook server…")
+    print("✅ Starting Telegram Webhook server...")
     app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
-        url_path=BOT_TOKEN,                       # לא מדפיסים/מראים את הטוקן בלוגים
-        webhook_url=f"{WEBHOOK_HOST}/{BOT_TOKEN}" # כתובת השירות שלך ב-Render
+        url_path=BOT_TOKEN,
+        webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}",
     )
 
 if __name__ == "__main__":
