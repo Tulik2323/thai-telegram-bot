@@ -59,12 +59,17 @@ def main():
     bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    print("✅ Bot is running with Deep Translator...")
+
+    print("✅ Bot is starting polling...")
     try:
         bot_app.run_polling()
     except Conflict:
         print("⚠️ Another instance is already running. Exiting.")
         sys.exit()
+    except Exception as e:
+        print(f"❌ Polling error: {e}")
+
 
 if __name__ == "__main__":
     main()
+
