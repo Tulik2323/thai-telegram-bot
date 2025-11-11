@@ -1,6 +1,6 @@
 import os
 import threading
-from flask import Flask
+from flask import Flask, request
 from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from gtts import gTTS
@@ -11,13 +11,19 @@ from telegram.error import Conflict
 # === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# === Flask dummy server ===
+# === Flask app (Webhook listener for Telegram) ===
 app = Flask(__name__)
+
+@app.route(f"/{BOT_TOKEN}", methods=['POST'])
+def webhook():
+    """Telegram webhook endpoint"""
+    return "OK", 200
 
 @app.route('/')
 def home():
-    return "🤖 Thai Telegram Bot is running with Deep Translator!"
+    return "🤖 Thai Telegram Bot is live and using Webhook!"
 
+# === Start Flask server (for Render keep-alive) ===
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
 
@@ -36,7 +42,7 @@ async def generate_voice(thai_text):
     tts.save(filename)
     return filename
 
-# === Telegram handler ===
+# === Telegram message handler ===
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     await update.message.chat.send_action("typing")
@@ -60,16 +66,21 @@ def main():
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("✅ Bot is starting polling...")
+    WEBHOOK_URL = "https://thai-telegram-bot-1.onrender.com"  # החלף לכתובת שלך אם שונה
+
+    print("✅ Bot is running with Deep Translator using Webhook...")
     try:
-        bot_app.run_polling()
+        bot_app.run_webhook(
+            listen="0.0.0.0",
+            port=10000,
+            url_path=BOT_TOKEN,
+            webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}",
+        )
     except Conflict:
         print("⚠️ Another instance is already running. Exiting.")
         sys.exit()
     except Exception as e:
-        print(f"❌ Polling error: {e}")
-
+        print(f"❌ Webhook error: {e}")
 
 if __name__ == "__main__":
     main()
-
