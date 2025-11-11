@@ -34,13 +34,31 @@ def openrouter_generate(prompt):
         "X-Title": "Thai Translation Bot"
     }
     data = {
-        "model": "mistralai/mistral-7b-instruct",  # אתה יכול לשנות למודל אחר (למשל meta-llama/llama-3-8b-instruct)
+        "model": "mistralai/mistral-7b-instruct",
         "messages": [{"role": "user", "content": prompt}]
     }
+
     response = requests.post(url, headers=headers, json=data)
+
     if response.status_code == 200:
-        result = response.json()
-        return result["choices"][0]["message"]["content"]
+        try:
+            result = response.json()
+            content = result["choices"][0]["message"].get("content", "").strip()
+
+            # אם המודל מחזיר רשימה של חלקים (למשל [{"text": "..."}, ...])
+            if not content and "parts" in result["choices"][0]["message"]:
+                parts = result["choices"][0]["message"]["parts"]
+                content = "\n".join([p.get("text", "") for p in parts if "text" in p]).strip()
+
+            # אם גם זה ריק
+            if not content:
+                content = "⚠️ No response text received from AI model."
+
+            return content
+
+        except Exception as e:
+            return f"⚠️ Error parsing AI response: {e}"
+
     else:
         return f"⚠️ OpenRouter Error {response.status_code}: {response.text}"
 
@@ -57,10 +75,13 @@ async def translate_to_thai(text):
 
 # === Voice ===
 async def generate_voice(thai_text):
+    if not thai_text or len(thai_text.strip()) == 0:
+        return None
     tts = gTTS(text=thai_text, lang='th')
     filename = "thai_voice.mp3"
     tts.save(filename)
     return filename
+
 
 # === Telegram handler ===
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -93,3 +114,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
