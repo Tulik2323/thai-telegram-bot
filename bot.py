@@ -39,7 +39,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         voice = create_voice(thai)
         if voice:
-            await update.message.reply_audio(audio=InputFile(voice))
+          from telegram import Audio
+
+with open(voice, "rb") as f:
+    await update.message.reply_audio(
+        audio=f,
+        filename="thai_voice.mp3",
+        title="Thai Pronunciation 🇹🇭",
+        performer="ThaiBot",
+        caption="🎧 Thai voice"
+    )
+
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error: {e}")
 
@@ -60,3 +70,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
