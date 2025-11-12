@@ -4,6 +4,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 from gtts import gTTS
 from deep_translator import GoogleTranslator
 
+# === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://thai-telegram-bot-1.onrender.com")
 PORT = int(os.getenv("PORT", "10000"))
@@ -16,19 +17,21 @@ async def translate_to_thai(text):
 
 # === Voice generation ===
 def create_voice(thai_text):
-    if not thai_text.strip():
+    thai_text = thai_text.strip()
+    if not thai_text:
         return None
     filename = "thai_voice.mp3"
     tts = gTTS(text=thai_text, lang='th')
     tts.save(filename)
     return filename
 
-# === Handlers ===
+# === /start command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Hi! Send me any English sentence and I'll translate it to Thai with Google Translate and voice."
+        "👋 Hi! Send me any English sentence and I'll translate it to Thai with voice 🎧"
     )
 
+# === Handle messages ===
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     await update.message.chat.send_action("typing")
@@ -39,24 +42,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         voice = create_voice(thai)
         if voice:
-          from telegram import Audio
-
-with open(voice, "rb") as f:
-    await update.message.reply_audio(
-        audio=f,
-        filename="thai_voice.mp3",
-        title="Thai Pronunciation 🇹🇭",
-        performer="ThaiBot",
-        caption="🎧 Thai voice"
-    )
-
+            with open(voice, "rb") as audio_file:
+                await update.message.reply_audio(
+                    audio=audio_file,
+                    filename="thai_voice.mp3",
+                    title="Thai Pronunciation 🇹🇭",
+                    performer="ThaiBot",
+                    caption="🎧 Thai voice"
+                )
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error: {e}")
 
 # === Main ===
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
@@ -70,4 +69,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
