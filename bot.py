@@ -13,7 +13,7 @@ PORT = int(os.getenv("PORT", "10000"))
 # === Translate English → Thai ===
 async def translate_to_thai(text):
     thai = GoogleTranslator(source="en", target="th").translate(text)
-    phonetic = romanize(thai, engine="thai2rom")  # convert Thai → Latin pronunciation
+    phonetic = romanize(thai, engine="royin")  # convert Thai → Latin pronunciation
     formatted = f"🇹🇭 {thai}\n🗣️ {phonetic}\n🇬🇧 {text}"
     return thai, formatted
 
@@ -71,3 +71,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
