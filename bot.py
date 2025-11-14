@@ -3,6 +3,7 @@ from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from gtts import gTTS
 from deep_translator import GoogleTranslator
+from pythainlp.transliterate import romanize  # for phonetic transcription
 
 # === Environment variables ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -12,7 +13,8 @@ PORT = int(os.getenv("PORT", "10000"))
 # === Translate English → Thai ===
 async def translate_to_thai(text):
     thai = GoogleTranslator(source="en", target="th").translate(text)
-    formatted = f"🇹🇭 {thai}\n🇬🇧 {text}"
+    phonetic = romanize(thai, engine="thai2rom")  # convert Thai → Latin pronunciation
+    formatted = f"🇹🇭 {thai}\n🗣️ {phonetic}\n🇬🇧 {text}"
     return thai, formatted
 
 # === Voice generation ===
@@ -28,7 +30,7 @@ def create_voice(thai_text):
 # === /start command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Hi! Send me any English sentence and I'll translate it to Thai with voice 🎧"
+        "👋 Hi! Send me any English sentence and I’ll translate it to Thai, show the pronunciation, and play the voice 🎧"
     )
 
 # === Handle messages ===
@@ -59,7 +61,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("✅ Starting Telegram Webhook server...")
+    print("✅ Starting Telegram Webhook server with Phonetic support...")
     app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
